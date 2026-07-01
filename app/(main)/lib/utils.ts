@@ -11,8 +11,8 @@ export function getPosterUrl(path: string | null): string {
   return getImageUrl(path, 'w500');
 }
 
-export function formatRating(vote: number): string {
-  return vote.toFixed(1);
+export function formatRating(vote: number | undefined): string {
+  return vote?.toFixed(1) ?? 'N/A';
 }
 
 export function formatYear(date: string): string {
