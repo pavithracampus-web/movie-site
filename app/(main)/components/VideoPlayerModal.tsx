@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Movie } from '@/app/(main)/types';
+import type { Movie, TVShowDetails, TVSeason, TVEpisode } from '@/app/(main)/types';
 import { STREAM_SOURCES, TORRENT_INDEX } from '@/app/(main)/lib/utils';
 
 interface TorrentResult {
@@ -76,7 +76,7 @@ function RequestForm({ movie, onClose }: { movie: Movie; onClose: () => void }) 
         ) : (
           <>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-semibold text-lg">Request Movie</h3>
+              <h3 className="text-white font-semibold text-lg">{movie.title ? 'Request Movie' : 'Request TV Show'}</h3>
               <button onClick={onClose} className="text-netflix-gray hover:text-white transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -248,6 +248,77 @@ function TorrentPanel({
   );
 }
 
+function TVEpisodeSelector({
+  seasons,
+  selectedSeason,
+  onSeasonChange,
+  episodes,
+  episodesLoading,
+  selectedEpisode,
+  onEpisodeSelect,
+}: {
+  seasons: TVSeason[];
+  selectedSeason: number;
+  onSeasonChange: (s: number) => void;
+  episodes: TVEpisode[];
+  episodesLoading: boolean;
+  selectedEpisode: number | null;
+  onEpisodeSelect: (e: number) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <label className="text-sm text-netflix-light font-medium whitespace-nowrap">
+          Season
+        </label>
+        <select
+          value={selectedSeason}
+          onChange={(e) => onSeasonChange(Number(e.target.value))}
+          className="bg-netflix-darker border border-white/10 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-white/30"
+        >
+          {seasons
+            .filter((s) => s.season_number > 0)
+            .map((s) => (
+              <option key={s.id} value={s.season_number}>
+                {s.name} ({s.episode_count} episodes)
+              </option>
+            ))}
+        </select>
+      </div>
+
+      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 max-h-48 overflow-y-auto pr-1">
+        {episodesLoading ? (
+          <div className="col-span-full flex items-center justify-center py-8">
+            <div className="w-6 h-6 border-2 border-white/20 border-t-netflix-red rounded-full animate-spin" />
+          </div>
+        ) : episodes.length === 0 ? (
+          <p className="col-span-full text-sm text-netflix-gray text-center py-4">
+            No episodes found for this season.
+          </p>
+        ) : (
+          episodes.map((ep) => (
+            <button
+              key={ep.id}
+              onClick={() => onEpisodeSelect(ep.episode_number)}
+              className={`flex flex-col items-center justify-center rounded-md p-2 transition-colors ${
+                selectedEpisode === ep.episode_number
+                  ? 'bg-netflix-red text-white'
+                  : 'bg-white/5 text-netflix-light hover:bg-white/20 hover:text-white'
+              }`}
+              title={`S${ep.season_number}E${ep.episode_number} - ${ep.name}`}
+            >
+              <span className="text-xs font-bold">{ep.episode_number}</span>
+              <span className="text-[10px] truncate w-full text-center leading-tight mt-0.5 opacity-80">
+                {ep.name}
+              </span>
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayerModalProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -257,6 +328,14 @@ export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayer
   const [showRequest, setShowRequest] = useState(false);
   const [torrentMagnet, setTorrentMagnet] = useState<string | null>(null);
 
+  // TV series state
+  const [tvDetails, setTvDetails] = useState<TVShowDetails | null>(null);
+  const [episodes, setEpisodes] = useState<TVEpisode[]>([]);
+  const [selectedSeason, setSelectedSeason] = useState(1);
+  const [selectedEpisode, setSelectedEpisode] = useState<number | null>(null);
+  const [episodesLoading, setEpisodesLoading] = useState(false);
+
+  const isTV = movie?.media_type === 'tv';
   const isTorrentMode = currentServer === TORRENT_INDEX;
 
   useEffect(() => {
@@ -275,6 +354,10 @@ export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayer
     setMovieDetails(null);
     setShowRequest(false);
     setTorrentMagnet(null);
+    setTvDetails(null);
+    setEpisodes([]);
+    setSelectedSeason(1);
+    setSelectedEpisode(null);
   }, []);
 
   useEffect(() => {
@@ -282,13 +365,25 @@ export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayer
 
     resetState();
 
-    const fetchImdbId = async () => {
+    const fetchData = async () => {
       setFetchingId(true);
       try {
-        const res = await fetch(`/api/movies?type=detail&id=${movie.id}`);
-        if (!res.ok) throw new Error('Failed to fetch details');
-        const data = await res.json();
-        setMovieDetails(data);
+        if (isTV) {
+          const res = await fetch(`/api/movies?type=tv-detail&id=${movie.id}`);
+          if (!res.ok) throw new Error('Failed to fetch TV details');
+          const data: TVShowDetails = await res.json();
+          setTvDetails(data);
+          setMovieDetails({ imdb_id: data.imdb_id });
+          const firstRealSeason = data.seasons?.find((s) => s.season_number > 0);
+          if (firstRealSeason) {
+            setSelectedSeason(firstRealSeason.season_number);
+          }
+        } else {
+          const res = await fetch(`/api/movies?type=detail&id=${movie.id}`);
+          if (!res.ok) throw new Error('Failed to fetch details');
+          const data = await res.json();
+          setMovieDetails(data);
+        }
       } catch {
         setError('Failed to load video source.');
       } finally {
@@ -296,8 +391,31 @@ export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayer
       }
     };
 
-    fetchImdbId();
-  }, [movie, isOpen, resetState]);
+    fetchData();
+  }, [movie, isOpen, resetState, isTV]);
+
+  useEffect(() => {
+    if (!movie || !isTV || !tvDetails) return;
+
+    const fetchEpisodes = async () => {
+      setEpisodesLoading(true);
+      setSelectedEpisode(null);
+      try {
+        const res = await fetch(
+          `/api/movies?type=tv-season&id=${movie.id}&season=${selectedSeason}`
+        );
+        if (!res.ok) throw new Error('Failed to fetch episodes');
+        const data = await res.json();
+        setEpisodes(data.episodes || []);
+      } catch {
+        setEpisodes([]);
+      } finally {
+        setEpisodesLoading(false);
+      }
+    };
+
+    fetchEpisodes();
+  }, [movie, isTV, tvDetails, selectedSeason]);
 
   useEffect(() => {
     if (!fetchingId && movieDetails && !isTorrentMode) {
@@ -305,21 +423,24 @@ export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayer
     }
   }, [fetchingId, movieDetails, isTorrentMode]);
 
-  const handleServerSwitch = useCallback((index: number) => {
-    if (index === currentServer) return;
+  const handleServerSwitch = useCallback(
+    (index: number) => {
+      if (index === currentServer) return;
 
-    if (index === TORRENT_INDEX) {
-      setCurrentServer(index);
-      setLoading(false);
+      if (index === TORRENT_INDEX) {
+        setCurrentServer(index);
+        setLoading(false);
+        setError('');
+        return;
+      }
+
+      setLoading(true);
       setError('');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setCurrentServer(index);
-    setTorrentMagnet(null);
-  }, [currentServer]);
+      setCurrentServer(index);
+      setTorrentMagnet(null);
+    },
+    [currentServer]
+  );
 
   const handleTorrentStream = useCallback((magnet: string) => {
     setTorrentMagnet(magnet);
@@ -329,15 +450,32 @@ export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayer
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
-      if (showRequest) { setShowRequest(false); return; }
+      if (showRequest) {
+        setShowRequest(false);
+        return;
+      }
       onClose();
     }
   };
 
   if (!isOpen || !movie) return null;
 
+  const displayTitle = movie.title || movie.name || '';
   const imdbId = movieDetails?.imdb_id;
-  const videoUrl = !isTorrentMode && imdbId ? STREAM_SOURCES[currentServer].url(imdbId) : null;
+
+  const videoUrl =
+    !isTorrentMode &&
+    (isTV
+      ? selectedEpisode && tvDetails?.imdb_id
+        ? STREAM_SOURCES[currentServer].url(tvDetails.imdb_id, selectedSeason, selectedEpisode)
+        : null
+      : imdbId
+        ? STREAM_SOURCES[currentServer].url(imdbId)
+        : null);
+
+  const iframeKey = isTV
+    ? `tv-${movie.id}-s${selectedSeason}e${selectedEpisode}-${currentServer}`
+    : `${imdbId}-${currentServer}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" onKeyDown={handleKeyDown}>
@@ -348,7 +486,8 @@ export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayer
           <div className="flex items-center justify-between px-4 md:px-6 py-4 bg-netflix-darker flex-wrap gap-2">
             <div className="min-w-0 flex-1">
               <h3 className="text-white font-semibold text-sm md:text-lg truncate max-w-xs md:max-w-md">
-                {movie.title}
+                {displayTitle}
+                {isTV && selectedEpisode && ` - S${selectedSeason}:E${selectedEpisode}`}
               </h3>
               {imdbId && !isTorrentMode && (
                 <p className="text-xs text-netflix-gray mt-0.5">IMDb: {imdbId}</p>
@@ -387,7 +526,7 @@ export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayer
                   <button
                     onClick={() => setShowRequest(true)}
                     className="px-2 md:px-2.5 py-1 text-xs font-medium rounded bg-white/5 text-netflix-light border border-dashed border-white/20 hover:bg-white/10 hover:text-white transition-colors"
-                    title="Request this movie"
+                    title={`Request this ${isTV ? 'TV show' : 'movie'}`}
                   >
                     + Request
                   </button>
@@ -398,7 +537,14 @@ export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayer
                 className="text-netflix-gray hover:text-white transition-colors ml-1"
                 aria-label="Close"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 md:h-6 md:w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -418,14 +564,33 @@ export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayer
             ) : !videoUrl ? (
               <div className="absolute inset-0 flex items-center justify-center bg-netflix-darker">
                 <div className="text-center px-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-4 text-netflix-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-16 w-16 mx-auto mb-4 text-netflix-gray"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    />
                   </svg>
-                  <p className="text-netflix-gray mb-2">Video source unavailable</p>
+                  <p className="text-netflix-gray mb-2">
+                    {isTV
+                      ? selectedEpisode
+                        ? 'Video source unavailable'
+                        : 'Select a season and episode to play'
+                      : 'Video source unavailable'}
+                  </p>
                   <p className="text-xs text-netflix-gray/60">
-                    {!imdbId
-                      ? 'No IMDb ID available. Try the Torrent tab or Request button below.'
-                      : 'All servers failed to load. Try Torrent or Request.'}
+                    {isTV && !selectedEpisode
+                      ? 'Choose a season and episode from the selector below.'
+                      : !imdbId
+                        ? 'No IMDb ID available. Try the Torrent tab or Request button below.'
+                        : 'All servers failed to load. Try Torrent or Request.'}
                   </p>
                 </div>
               </div>
@@ -442,11 +607,11 @@ export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayer
                   </div>
                 )}
                 <iframe
-                  key={`${imdbId}-${currentServer}`}
+                  key={iframeKey}
                   src={videoUrl}
                   className="w-full h-full"
                   allowFullScreen
-                  allow="autoplay; fullscreen"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   onLoad={() => setLoading(false)}
                   onError={() => {
                     setLoading(false);
@@ -456,6 +621,20 @@ export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayer
               </>
             )}
           </div>
+
+          {isTV && tvDetails && (
+            <div className="px-6 py-4 border-t border-white/10">
+              <TVEpisodeSelector
+                seasons={tvDetails.seasons || []}
+                selectedSeason={selectedSeason}
+                onSeasonChange={setSelectedSeason}
+                episodes={episodes}
+                episodesLoading={episodesLoading}
+                selectedEpisode={selectedEpisode}
+                onEpisodeSelect={setSelectedEpisode}
+              />
+            </div>
+          )}
 
           {movie.overview && !isTorrentMode && (
             <div className="px-6 py-4 border-t border-white/10">

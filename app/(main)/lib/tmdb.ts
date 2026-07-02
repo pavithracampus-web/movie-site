@@ -45,46 +45,79 @@ async function tmdbFetch(endpoint: string, params: Record<string, string> = {}) 
   return res.json();
 }
 
-export async function getTrending() {
-  const data = await tmdbFetch('/trending/movie/week');
-  return data.results || [];
+export async function getTrending(page = 1) {
+  return tmdbFetch('/trending/movie/week', { page: String(page) });
 }
 
 export async function getMoviesByGenre(genreId: number, page = 1) {
-  const data = await tmdbFetch('/discover/movie', {
+  return tmdbFetch('/discover/movie', {
     with_genres: String(genreId),
     sort_by: 'popularity.desc',
     page: String(page),
   });
-  return data.results || [];
 }
 
 export async function getPopular(page = 1) {
-  const data = await tmdbFetch('/movie/popular', { page: String(page) });
-  return data.results || [];
+  return tmdbFetch('/movie/popular', { page: String(page) });
 }
 
 export async function getTopRated(page = 1) {
-  const data = await tmdbFetch('/movie/top_rated', { page: String(page) });
-  return data.results || [];
+  return tmdbFetch('/movie/top_rated', { page: String(page) });
 }
 
 export async function searchMovies(query: string, page = 1) {
-  const data = await tmdbFetch('/search/movie', {
-    query,
-    page: String(page),
-  });
-  return data;
+  return tmdbFetch('/search/movie', { query, page: String(page) });
 }
 
 export async function getMovieDetails(movieId: number) {
-  const data = await tmdbFetch(`/movie/${movieId}`, {
+  return tmdbFetch(`/movie/${movieId}`, {
     append_to_response: 'videos,credits',
   });
-  return data;
 }
 
 export async function getNowPlaying(page = 1) {
-  const data = await tmdbFetch('/movie/now_playing', { page: String(page) });
-  return data.results || [];
+  return tmdbFetch('/movie/now_playing', { page: String(page) });
+}
+
+export async function getTVShowDetails(tvId: number) {
+  return tmdbFetch(`/tv/${tvId}`, {
+    append_to_response: 'videos,credits',
+  });
+}
+
+export async function getSeasonEpisodes(tvId: number, seasonNumber: number) {
+  return tmdbFetch(`/tv/${tvId}/season/${seasonNumber}`);
+}
+
+export async function getTrendingTV(page = 1) {
+  return tmdbFetch('/trending/tv/week', { page: String(page) });
+}
+
+export async function getPopularTV(page = 1) {
+  return tmdbFetch('/tv/popular', { page: String(page) });
+}
+
+export async function getTopRatedTV(page = 1) {
+  return tmdbFetch('/tv/top_rated', { page: String(page) });
+}
+
+export async function getAiringToday(page = 1) {
+  return tmdbFetch('/tv/airing_today', { page: String(page) });
+}
+
+export async function searchMulti(query: string, page = 1) {
+  return tmdbFetch('/search/multi', { query, page: String(page) });
+}
+
+function normalizeTVResult(item: Record<string, unknown>) {
+  return {
+    ...item,
+    title: (item as any).name || (item as any).title,
+    release_date: (item as any).first_air_date || (item as any).release_date || '',
+    media_type: (item as any).media_type || 'tv',
+  };
+}
+
+export function normalizeTVResults(results: Record<string, unknown>[]) {
+  return results.map(normalizeTVResult);
 }

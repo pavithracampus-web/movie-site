@@ -1,19 +1,29 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface HeaderProps {
   onSearchClick: () => void;
+  activeNav?: string;
+  onNavChange?: (nav: string) => void;
 }
 
-export default function Header({ onSearchClick }: HeaderProps) {
+export default function Header({ onSearchClick, activeNav, onNavChange }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const isActive = (path: string) => {
+    if (path === '/') return pathname === '/';
+    return pathname.startsWith(path);
+  };
 
   return (
     <header
@@ -23,21 +33,45 @@ export default function Header({ onSearchClick }: HeaderProps) {
     >
       <div className="flex items-center justify-between px-4 md:px-12 h-16 md:h-20">
         <div className="flex items-center gap-8">
-          <h1 className="text-netflix-red text-3xl md:text-4xl font-bold tracking-tight select-none">
-            FLARE
-          </h1>
+          <Link href="/" className="shrink-0">
+            <h1 className="text-netflix-red text-3xl md:text-4xl font-bold tracking-tight select-none">
+              FLARE
+            </h1>
+          </Link>
           <nav className="hidden md:flex items-center gap-5">
-            {['Home', 'Series', 'Movies', 'My List'].map((item) => (
-              <a
-                key={item}
-                href="#"
-                className={`text-sm font-medium transition-colors hover:text-white ${
-                  item === 'Home' ? 'text-white' : 'text-netflix-light'
-                }`}
-              >
-                {item}
-              </a>
-            ))}
+            <Link
+              href="/"
+              className={`text-sm font-medium transition-colors hover:text-white ${
+                isActive('/') && pathname === '/' ? 'text-white' : 'text-netflix-light'
+              }`}
+            >
+              Home
+            </Link>
+            <Link
+              href="/series"
+              className={`text-sm font-medium transition-colors hover:text-white ${
+                isActive('/series') ? 'text-white' : 'text-netflix-light'
+              }`}
+            >
+              Series
+            </Link>
+            <Link
+              href="/movies"
+              className={`text-sm font-medium transition-colors hover:text-white ${
+                isActive('/movies') ? 'text-white' : 'text-netflix-light'
+              }`}
+            >
+              Movies
+            </Link>
+            <a
+              href="#my-list"
+              onClick={(e) => { e.preventDefault(); onNavChange?.('My List'); }}
+              className={`text-sm font-medium transition-colors hover:text-white ${
+                activeNav === 'My List' ? 'text-white' : 'text-netflix-light'
+              }`}
+            >
+              My List
+            </a>
           </nav>
         </div>
 

@@ -93,7 +93,7 @@ The middleware runs on Vercel's Edge Runtime by default. The `dns.google` lookup
 ## Streaming Sources
 The player modal uses Vidsrc embeds:
 - Primary: `https://vidsrc.to/embed/movie/{imdb_id}`
-- Fallback: `https://vidsrc.xyz/embed/movie/{imdb_id}`
+- Fallback: `https://vidsrc.pro/embed/movie/{tmdb_id}`
 - Users can toggle between sources in the player modal
 
 ## Customization

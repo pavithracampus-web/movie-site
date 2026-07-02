@@ -24,11 +24,29 @@ export function truncate(text: string, length: number): string {
   return text.slice(0, length).trimEnd() + '...';
 }
 
-export const STREAM_SOURCES = [
-  { name: 'Server 1', url: (id: string) => `https://vidsrc.to/embed/movie/${id}` },
-  { name: 'Server 2', url: (id: string) => `https://vidsrc.xyz/embed/movie/${id}` },
-  { name: 'Server 3', url: (id: string) => `https://embed.su/embed/movie/${id}` },
-  { name: 'Server 4', url: (id: string) => `https://vidsrc.me/embed/movie?imdb=${id}` },
+type StreamUrlFn = (id: string, season?: number, episode?: number) => string;
+
+export const STREAM_SOURCES: { name: string; url: StreamUrlFn }[] = [
+  {
+    name: 'Server 1',
+    url: (id, s, e) =>
+      s ? `https://vidsrc.pro/embed/tv/${id}/${s}/${e}` : `https://vidsrc.pro/embed/movie/${id}`,
+  },
+  {
+    name: 'Server 2',
+    url: (id, s, e) =>
+      s ? `https://vidsrc.in/embed/tv/${id}/${s}/${e}` : `https://vidsrc.in/embed/movie/${id}`,
+  },
+  {
+    name: 'Server 3',
+    url: (id, s, e) =>
+      s ? `https://vidsrc.to/embed/tv/${id}/${s}/${e}` : `https://vidsrc.to/embed/movie/${id}`,
+  },
+  {
+    name: 'Server 4',
+    url: (id, s, e) =>
+      s ? `https://embed.su/embed/tv/${id}/${s}/${e}` : `https://embed.su/embed/movie/${id}`,
+  },
 ];
 
 export const TORRENT_INDEX = 4;

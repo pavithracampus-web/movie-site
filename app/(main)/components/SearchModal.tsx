@@ -49,7 +49,7 @@ export default function SearchModal({ isOpen, onClose, onMovieClick }: SearchMod
 
     try {
       const res = await fetch(
-        `/api/movies?type=search&q=${encodeURIComponent(searchQuery)}`,
+        `/api/movies?type=search-multi&q=${encodeURIComponent(searchQuery)}`,
         { signal: controller.signal }
       );
       if (!res.ok) throw new Error('Search failed');
@@ -124,7 +124,7 @@ export default function SearchModal({ isOpen, onClose, onMovieClick }: SearchMod
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search movies, shows, genres..."
+               placeholder="Search movies & TV series..."
               className="w-full bg-netflix-darker border-2 border-white/20 rounded-lg pl-12 pr-32 py-4 text-white text-lg placeholder-netflix-gray focus:outline-none focus:border-white/50 transition-colors"
             />
             {query && (
@@ -172,9 +172,9 @@ export default function SearchModal({ isOpen, onClose, onMovieClick }: SearchMod
               <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-4 text-netflix-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              <p className="text-netflix-gray text-lg mb-1">No results found</p>
+               <p className="text-netflix-gray text-lg mb-1">No results found</p>
               <p className="text-sm text-netflix-gray/60">
-                No movies match &quot;{query}&quot;. Try a different search term.
+                No movies or TV series match &quot;{query}&quot;. Try a different search term.
               </p>
             </div>
           )}
@@ -193,7 +193,7 @@ export default function SearchModal({ isOpen, onClose, onMovieClick }: SearchMod
                     onClick={() => { onMovieClick(movie); onClose(); }}
                     className="text-left group"
                   >
-                    <div className="aspect-[2/3] rounded-md overflow-hidden bg-netflix-darker mb-2">
+                    <div className="aspect-[2/3] rounded-md overflow-hidden bg-netflix-darker mb-2 relative">
                       <img
                         src={getPosterUrl(movie.poster_path)}
                         alt={movie.title}
@@ -211,6 +211,9 @@ export default function SearchModal({ isOpen, onClose, onMovieClick }: SearchMod
                           }
                         }}
                       />
+                      <span className="absolute top-1.5 right-1.5 bg-black/70 text-[10px] text-white px-1.5 py-0.5 rounded font-medium backdrop-blur-sm uppercase">
+                        {movie.media_type === 'tv' ? 'TV' : 'Movie'}
+                      </span>
                     </div>
                     <p className="text-sm text-white font-medium truncate">{movie.title}</p>
                     <div className="flex items-center gap-2 text-xs text-netflix-light">
@@ -229,9 +232,9 @@ export default function SearchModal({ isOpen, onClose, onMovieClick }: SearchMod
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <p className="text-netflix-gray text-lg mb-2">Find your next watch</p>
-              <p className="text-sm text-netflix-gray/60 max-w-md mx-auto leading-relaxed">
-                Search thousands of movies. Type a title above, then press Enter or click Search for full results.
-              </p>
+               <p className="text-sm text-netflix-gray/60 max-w-md mx-auto leading-relaxed">
+                 Search thousands of movies and TV series. Type a title above, then press Enter or click Search for full results.
+               </p>
             </div>
           )}
         </div>

@@ -1,6 +1,7 @@
 export interface Movie {
   id: number;
   title: string;
+  name?: string;
   overview: string;
   poster_path: string | null;
   backdrop_path: string | null;
@@ -41,6 +42,44 @@ export interface MovieDetails extends Movie {
       department: string;
     }[];
   };
+}
+
+export interface TVSeason {
+  id: number;
+  season_number: number;
+  name: string;
+  overview: string;
+  episode_count: number;
+  air_date: string;
+  poster_path: string | null;
+}
+
+export interface TVEpisode {
+  id: number;
+  name: string;
+  overview: string;
+  episode_number: number;
+  season_number: number;
+  air_date: string;
+  still_path: string | null;
+  vote_average: number;
+}
+
+export interface TVShowDetails {
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  first_air_date: string;
+  vote_average: number;
+  number_of_seasons: number;
+  number_of_episodes: number;
+  seasons: TVSeason[];
+  status: string;
+  genres: { id: number; name: string }[];
+  imdb_id?: string | null;
+  media_type?: string;
 }
 
 export interface Genre {
