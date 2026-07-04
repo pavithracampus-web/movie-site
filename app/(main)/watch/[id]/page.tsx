@@ -58,6 +58,64 @@ function ShareIcon() {
   );
 }
 
+function ActionButtons({
+  liked,
+  onLike,
+  onShare,
+  copied,
+  downloadUrl,
+  canDownload,
+}: {
+  liked: 'up' | 'down' | null;
+  onLike: (v: 'up' | 'down' | null) => void;
+  onShare: () => void;
+  copied: boolean;
+  downloadUrl: string;
+  canDownload: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-1.5 sm:gap-2">
+      <div className="flex items-center bg-white/10 rounded-full overflow-hidden">
+        <button
+          onClick={() => onLike(liked === 'up' ? null : 'up')}
+          className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10 active:bg-white/20 ${liked === 'up' ? 'text-white' : 'text-[#aaaaaa]'}`}
+          aria-label="Like"
+        >
+          <ThumbsUpIcon />
+        </button>
+        <div className="w-px h-5 bg-white/20" />
+        <button
+          onClick={() => onLike(liked === 'down' ? null : 'down')}
+          className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10 active:bg-white/20 ${liked === 'down' ? 'text-white' : 'text-[#aaaaaa]'}`}
+          aria-label="Dislike"
+        >
+          <ThumbsDownIcon />
+        </button>
+      </div>
+      <button
+        onClick={onShare}
+        className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 text-sm font-medium text-[#aaaaaa] bg-white/10 rounded-full hover:bg-white/20 active:bg-white/30 transition-colors"
+        aria-label={copied ? 'Copied' : 'Share'}
+      >
+        <ShareIcon />
+      </button>
+      {canDownload && (
+        <a
+          href={downloadUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 text-sm font-medium rounded-full bg-white/10 text-[#aaaaaa] hover:bg-white/20 active:bg-white/30 transition-colors"
+          aria-label="Download"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+        </a>
+      )}
+    </div>
+  );
+}
+
 export default function WatchPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -248,53 +306,59 @@ export default function WatchPage({ params }: { params: { id: string } }) {
     );
   }
 
+  const title = movieDetails?.title || tvDetails?.name || '';
+  const year = movieDetails?.release_date?.split('-')[0] || tvDetails?.first_air_date?.split('-')[0] || '';
+  const rating = movieDetails?.vote_average?.toFixed(1) || tvDetails?.vote_average?.toFixed(1) || '';
+  const genres = movieDetails?.genres || tvDetails?.genres || [];
+  const overview = movieDetails?.overview || tvDetails?.overview || '';
+
   return (
     <div className="min-h-screen bg-[#0f0f0f]">
       <header className="fixed top-0 left-0 right-0 z-40 bg-[#0f0f0f]/95">
-        <div className="flex items-center justify-between px-4 md:px-8 h-14">
-          <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="text-white hover:text-white/70 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="flex items-center justify-between px-3 sm:px-8 h-12 sm:h-14">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button onClick={() => router.back()} className="text-white hover:text-white/70 transition-colors p-1 -ml-1" aria-label="Go back">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <Link href="/">
-              <h1 className="text-[#ff0000] text-xl font-bold tracking-tight">FLARE</h1>
+              <h1 className="text-[#ff0000] text-lg sm:text-xl font-bold tracking-tight">FLARE</h1>
             </Link>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/series" className="text-sm text-white/70 hover:text-white transition-colors">Series</Link>
-            <Link href="/movies" className="text-sm text-white/70 hover:text-white transition-colors">Movies</Link>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link href="/series" className="text-xs sm:text-sm text-white/70 hover:text-white transition-colors">Series</Link>
+            <Link href="/movies" className="text-xs sm:text-sm text-white/70 hover:text-white transition-colors">Movies</Link>
           </div>
         </div>
       </header>
 
-      <div className="pt-14">
+      <div className="pt-12 sm:pt-14">
         <div className="bg-black">
           <div className="max-w-[1280px] mx-auto relative aspect-video">
             {embedUrl ? (
               <>
                 {iframeLoading && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      <p className="text-sm text-[#aaaaaa]">
-                        {iframeError ? `Trying ${SERVERS[activeServer].name}...` : `Loading ${SERVERS[activeServer].name}...`}
+                    <div className="flex flex-col items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      <p className="text-xs sm:text-sm text-[#aaaaaa]">
+                        {iframeError ? `Trying ${SERVERS[activeServer].label}...` : `Loading ${SERVERS[activeServer].label}...`}
                       </p>
                       {iframeError && !isLastServer && (
-                        <p className="text-xs text-yellow-400/80">Auto-selecting best server...</p>
+                        <p className="text-[10px] sm:text-xs text-yellow-400/80">Auto-selecting best server...</p>
                       )}
                     </div>
                   </div>
                 )}
                 {iframeError && !iframeLoading && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
-                    <div className="text-center px-6">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-3 text-[#aaaaaa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                    <div className="text-center px-4 sm:px-6">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-3 text-[#aaaaaa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <p className="text-[#aaaaaa] mb-1">{SERVERS[activeServer].name} failed</p>
-                      <p className="text-xs text-[#aaaaaa]/60">
+                      <p className="text-sm sm:text-base text-[#aaaaaa] mb-1">{SERVERS[activeServer].label} failed</p>
+                      <p className="text-[10px] sm:text-xs text-[#aaaaaa]/60">
                         {isLastServer
                           ? 'All servers failed. Try again later.'
                           : 'Auto-switching to next server...'}
@@ -314,11 +378,11 @@ export default function WatchPage({ params }: { params: { id: string } }) {
               </>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center bg-black">
-                <div className="text-center px-6">
-                  <PlayIcon className="h-16 w-16 mx-auto mb-4 text-[#aaaaaa]" />
-                  <p className="text-[#aaaaaa] text-lg mb-2">Select an Episode</p>
-                  <p className="text-sm text-[#aaaaaa]/60">
-                    {isTV ? 'Choose a season and episode below to start watching.' : 'Loading...'}
+                <div className="text-center px-4 sm:px-6">
+                  <PlayIcon className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4 text-[#aaaaaa]" />
+                  <p className="text-base sm:text-lg text-[#aaaaaa] mb-1 sm:mb-2">Select an Episode</p>
+                  <p className="text-xs sm:text-sm text-[#aaaaaa]/60">
+                    Choose a season and episode below to start watching.
                   </p>
                 </div>
               </div>
@@ -326,134 +390,144 @@ export default function WatchPage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        <div className="max-w-[1280px] mx-auto px-4 md:px-8 py-4">
-          {movieDetails ? (
-            <>
-              <h1 className="text-xl md:text-2xl font-bold text-white">{movieDetails.title}</h1>
-              <div className="flex items-center gap-2 mt-1 text-sm text-[#aaaaaa]">
-                <span className="text-white font-medium">{movieDetails.vote_average?.toFixed(1)}</span>
-                <span className="text-[#aaaaaa]">•</span>
-                <span>{movieDetails.release_date?.split('-')[0]}</span>
-                {movieDetails.runtime > 0 && (
-                  <><span className="text-[#aaaaaa]">•</span><span>{Math.floor(movieDetails.runtime / 60)}h {movieDetails.runtime % 60}m</span></>
-                )}
-              </div>
-              <div className="flex items-center gap-2 mt-3 flex-wrap">
-                <div className="flex items-center bg-white/10 rounded-full overflow-hidden">
-                  <button onClick={() => setLiked(liked === 'up' ? null : 'up')} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10 ${liked === 'up' ? 'text-white' : 'text-[#aaaaaa]'}`}><ThumbsUpIcon /><span className="hidden sm:inline">Like</span></button>
-                  <div className="w-px h-5 bg-white/20" />
-                  <button onClick={() => setLiked(liked === 'down' ? null : 'down')} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10 ${liked === 'down' ? 'text-white' : 'text-[#aaaaaa]'}`}><ThumbsDownIcon /></button>
-                </div>
-                <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-[#aaaaaa] bg-white/10 rounded-full hover:bg-white/20 transition-colors"><ShareIcon /><span className="hidden sm:inline">{copied ? 'Copied!' : 'Share'}</span></button>
-                <a href={`https://vidsrc.to/download/movie/${id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full bg-white/10 text-[#aaaaaa] hover:bg-white/20 hover:text-white transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                  <span className="hidden sm:inline">Download</span>
-                </a>
-                <div className="flex items-center gap-1 ml-auto">
-                  {SERVERS.map((server, i) => (
-                    <button key={i} onClick={() => handleServerChange(i)} className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${i === activeServer ? 'bg-white text-black' : 'bg-white/10 text-[#aaaaaa] hover:bg-white/20 hover:text-white'}`}>{server.name}</button>
+        <div className="max-w-[1280px] mx-auto px-3 sm:px-8 py-3 sm:py-4">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white leading-tight">
+            {title}
+            {isTV && selectedEpisode && currentEpisode && (
+              <span className="text-white/70 font-normal block sm:inline text-sm sm:text-base mt-0.5 sm:mt-0">
+                S{selectedSeason}:E{selectedEpisode} — {currentEpisode.name}
+              </span>
+            )}
+          </h1>
+
+          <div className="flex items-center gap-1.5 sm:gap-2 mt-1 sm:mt-2 text-xs sm:text-sm text-[#aaaaaa] flex-wrap">
+            {rating && <span className="text-white font-medium">{rating}</span>}
+            {rating && year && <span className="text-[#aaaaaa]">•</span>}
+            {year && <span>{year}</span>}
+{movieDetails?.runtime ? (
+  <><span className="text-[#aaaaaa]">•</span><span>{Math.floor(movieDetails.runtime / 60)}h {movieDetails.runtime % 60}m</span></>
+) : null}
+            {isTV && tvDetails && (
+              <>
+                <span className="text-[#aaaaaa] hidden sm:inline">•</span>
+                <span className="hidden sm:inline">{tvDetails.number_of_seasons} Season{tvDetails.number_of_seasons !== 1 ? 's' : ''}</span>
+                <span className="text-[#aaaaaa] hidden sm:inline">•</span>
+                <span className="hidden sm:inline">{tvDetails.number_of_episodes} Episode{tvDetails.number_of_episodes !== 1 ? 's' : ''}</span>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:gap-2 mt-2 sm:mt-3 flex-wrap">
+            <ActionButtons
+              liked={liked}
+              onLike={setLiked}
+              onShare={handleShare}
+              copied={copied}
+              downloadUrl={
+                movieDetails
+                  ? `https://vidsrc.to/download/movie/${id}`
+                  : `https://vidsrc.to/download/tv/${id}/${selectedSeason}/${selectedEpisode}`
+              }
+              canDownload={!isTV || !!selectedEpisode}
+            />
+            <div className="flex items-center gap-1 ml-auto">
+              {SERVERS.map((server, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleServerChange(i)}
+                  disabled={isTV && !selectedEpisode}
+                  className={`px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-medium rounded-full transition-colors active:scale-95 ${
+                    i === activeServer
+                      ? 'bg-white text-black'
+                      : 'bg-white/10 text-[#aaaaaa] hover:bg-white/20 hover:text-white'
+                  } ${isTV && !selectedEpisode ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  title={server.label}
+                >
+                  {server.name}
+                </button>
+              ))}
+              {iframeLoading && iframeError && !isLastServer && (
+                <span className="text-[10px] sm:text-xs text-yellow-400 ml-1 whitespace-nowrap">Auto...</span>
+              )}
+            </div>
+          </div>
+
+          {overview && (
+            <div
+              className={`mt-2 sm:mt-3 bg-white/5 rounded-lg sm:rounded-xl p-2 sm:p-3 cursor-pointer transition-colors hover:bg-white/10 ${showDesc ? '' : 'max-h-[60px] sm:max-h-[72px] overflow-hidden'}`}
+              onClick={() => setShowDesc(!showDesc)}
+            >
+              {genres.length > 0 && (
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2 flex-wrap">
+                  {genres.map((g) => (
+                    <span key={g.id} className="text-[10px] sm:text-xs bg-white/10 text-[#aaaaaa] px-1.5 sm:px-2 py-0.5 rounded-full">{g.name}</span>
                   ))}
-                  {iframeLoading && iframeError && <span className="text-xs text-yellow-400 ml-2">Auto-selecting...</span>}
-                </div>
-              </div>
-              {movieDetails.overview && (
-                <div className={`mt-3 bg-white/5 rounded-xl p-3 cursor-pointer transition-colors hover:bg-white/10 ${showDesc ? '' : 'max-h-[72px] overflow-hidden'}`} onClick={() => setShowDesc(!showDesc)}>
-                  {movieDetails.genres?.length > 0 && (
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      {movieDetails.genres.map((g) => <span key={g.id} className="text-xs bg-white/10 text-[#aaaaaa] px-2 py-0.5 rounded-full">{g.name}</span>)}
-                    </div>
-                  )}
-                  <p className="text-sm text-[#aaaaaa] leading-relaxed">{movieDetails.overview}</p>
-                  <button className="text-sm text-white/70 mt-1 hover:text-white">{showDesc ? 'Show less' : '... more'}</button>
                 </div>
               )}
-            </>
-          ) : tvDetails ? (
-            <>
-              <h1 className="text-xl md:text-2xl font-bold text-white">
-                {tvDetails.name}
-                {selectedEpisode && currentEpisode && (
-                  <span className="text-white/70 font-normal"> — S{selectedSeason}:E{selectedEpisode} {currentEpisode.name}</span>
-                )}
-              </h1>
-              <div className="flex items-center gap-2 mt-1 text-sm text-[#aaaaaa]">
-                <span className="text-white font-medium">{tvDetails.vote_average?.toFixed(1)}</span>
-                <span className="text-[#aaaaaa]">•</span>
-                <span>{tvDetails.first_air_date?.split('-')[0]}</span>
-                <span className="text-[#aaaaaa]">•</span>
-                <span>{tvDetails.number_of_seasons} Season{tvDetails.number_of_seasons !== 1 ? 's' : ''}</span>
-                <span className="text-[#aaaaaa]">•</span>
-                <span>{tvDetails.number_of_episodes} Episode{tvDetails.number_of_episodes !== 1 ? 's' : ''}</span>
-              </div>
-              <div className="flex items-center gap-2 mt-3 flex-wrap">
-                <div className="flex items-center bg-white/10 rounded-full overflow-hidden">
-                  <button onClick={() => setLiked(liked === 'up' ? null : 'up')} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10 ${liked === 'up' ? 'text-white' : 'text-[#aaaaaa]'}`}><ThumbsUpIcon /><span className="hidden sm:inline">Like</span></button>
-                  <div className="w-px h-5 bg-white/20" />
-                  <button onClick={() => setLiked(liked === 'down' ? null : 'down')} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10 ${liked === 'down' ? 'text-white' : 'text-[#aaaaaa]'}`}><ThumbsDownIcon /></button>
+              <p className="text-xs sm:text-sm text-[#aaaaaa] leading-relaxed">{overview}</p>
+              <button className="text-[10px] sm:text-sm text-white/70 mt-0.5 sm:mt-1 hover:text-white">
+                {showDesc ? 'Show less' : '... more'}
+              </button>
+            </div>
+          )}
+
+          {isTV && tvDetails && (
+            <div className="mt-4 sm:mt-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <label className="text-xs sm:text-sm font-medium text-white">Season</label>
+                <div className="relative">
+                  <select
+                    value={selectedSeason}
+                    onChange={(e) => setSelectedSeason(Number(e.target.value))}
+                    className="appearance-none bg-[#1a1a1a] border border-white/10 rounded-full pl-3 pr-7 sm:pl-4 sm:pr-8 py-1.5 text-white text-xs sm:text-sm font-medium focus:outline-none focus:border-white/30 transition-colors cursor-pointer"
+                  >
+                    {tvDetails.seasons?.filter((s) => s.season_number > 0).map((s) => (
+                      <option key={s.id} value={s.season_number} className="bg-[#1a1a1a] text-white">{s.name}</option>
+                    ))}
+                  </select>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-[#aaaaaa] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
-                <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-[#aaaaaa] bg-white/10 rounded-full hover:bg-white/20 transition-colors"><ShareIcon /><span className="hidden sm:inline">{copied ? 'Copied!' : 'Share'}</span></button>
-                <a href={selectedEpisode ? `https://vidsrc.to/download/tv/${id}/${selectedSeason}/${selectedEpisode}` : '#'} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full transition-colors ${selectedEpisode ? 'bg-white/10 text-[#aaaaaa] hover:bg-white/20 hover:text-white' : 'bg-white/5 text-[#aaaaaa]/40 cursor-not-allowed'}`} onClick={selectedEpisode ? undefined : (e) => e.preventDefault()}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                  <span className="hidden sm:inline">Download</span>
-                </a>
-                <div className="flex items-center gap-1 ml-auto">
-                  {SERVERS.map((server, i) => (
-                    <button key={i} onClick={() => handleServerChange(i)} disabled={!selectedEpisode} className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${i === activeServer ? 'bg-white text-black' : 'bg-white/10 text-[#aaaaaa] hover:bg-white/20 hover:text-white'} ${!selectedEpisode ? 'opacity-40 cursor-not-allowed' : ''}`}>{server.name}</button>
-                  ))}
-                  {selectedEpisode && iframeLoading && iframeError && <span className="text-xs text-yellow-400 ml-2">Auto-selecting...</span>}
-                </div>
+                <span className="text-[10px] sm:text-xs text-[#aaaaaa]">{episodes.length} ep</span>
               </div>
-              {tvDetails.overview && (
-                <div className={`mt-3 bg-white/5 rounded-xl p-3 cursor-pointer transition-colors hover:bg-white/10 ${showDesc ? '' : 'max-h-[72px] overflow-hidden'}`} onClick={() => setShowDesc(!showDesc)}>
-                  {tvDetails.genres?.length > 0 && (
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      {tvDetails.genres.map((g) => <span key={g.id} className="text-xs bg-white/10 text-[#aaaaaa] px-2 py-0.5 rounded-full">{g.name}</span>)}
-                    </div>
-                  )}
-                  <p className="text-sm text-[#aaaaaa] leading-relaxed">{tvDetails.overview}</p>
-                  <button className="text-sm text-white/70 mt-1 hover:text-white">{showDesc ? 'Show less' : '... more'}</button>
+              {episodesLoading ? (
+                <div className="flex items-center justify-center py-8 sm:py-12"><div className="w-6 h-6 sm:w-8 sm:h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>
+              ) : episodes.length === 0 ? (
+                <p className="text-xs sm:text-sm text-[#aaaaaa] text-center py-6 sm:py-8">No episodes available for this season.</p>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1.5 sm:gap-2">
+                  {episodes.map((ep) => {
+                    const isActive = selectedEpisode === ep.episode_number;
+                    return (
+                      <button
+                        key={ep.id}
+                        onClick={() => handleEpisodeClick(ep.episode_number)}
+                        className={`group relative flex flex-col rounded-lg sm:rounded-xl overflow-hidden text-left transition-all active:scale-[0.98] ${
+                          isActive ? 'ring-2 ring-white' : 'hover:ring-1 hover:ring-white/30'
+                        }`}
+                      >
+                        <div className={`aspect-video flex items-center justify-center text-sm font-bold ${isActive ? 'bg-white/20' : 'bg-white/10 group-hover:bg-white/15'}`}>
+                          {isActive ? <PlayIcon className="h-6 w-6 sm:h-8 sm:w-8 text-white" /> : <span className="text-base sm:text-lg font-bold text-white/60">{ep.episode_number}</span>}
+                        </div>
+                        <div className="p-1.5 sm:p-2 bg-[#1a1a1a] min-h-[44px] sm:min-h-[60px]">
+                          <p className={`text-[10px] sm:text-xs font-medium truncate ${isActive ? 'text-white' : 'text-white/80'}`}>{ep.episode_number}. {ep.name}</p>
+                          {ep.air_date && (
+                            <p className="text-[9px] sm:text-[10px] text-[#aaaaaa]/60 mt-0.5 sm:mt-1">
+                              {new Date(ep.air_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </p>
+                          )}
+                        </div>
+                        {isActive && (
+                          <div className="absolute top-0.5 sm:top-1 left-0.5 sm:left-1 bg-white text-black text-[8px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded">Playing</div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
-              <div className="mt-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <label className="text-sm font-medium text-white">Season</label>
-                  <div className="relative">
-                    <select value={selectedSeason} onChange={(e) => setSelectedSeason(Number(e.target.value))} className="appearance-none bg-[#1a1a1a] border border-white/10 rounded-full px-4 py-1.5 text-white text-sm font-medium focus:outline-none focus:border-white/30 transition-colors cursor-pointer pr-8">
-                      {tvDetails.seasons?.filter((s) => s.season_number > 0).map((s) => (
-                        <option key={s.id} value={s.season_number} className="bg-[#1a1a1a] text-white">{s.name}</option>
-                      ))}
-                    </select>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#aaaaaa] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                  </div>
-                  <span className="text-xs text-[#aaaaaa]">{episodes.length} episode{episodes.length !== 1 ? 's' : ''}</span>
-                </div>
-                {episodesLoading ? (
-                  <div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>
-                ) : episodes.length === 0 ? (
-                  <p className="text-sm text-[#aaaaaa] text-center py-8">No episodes available for this season.</p>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
-                    {episodes.map((ep) => {
-                      const isActive = selectedEpisode === ep.episode_number;
-                      return (
-                        <button key={ep.id} onClick={() => handleEpisodeClick(ep.episode_number)} className={`group relative flex flex-col rounded-xl overflow-hidden text-left transition-all ${isActive ? 'ring-2 ring-white' : 'hover:ring-1 hover:ring-white/30'}`}>
-                          <div className={`aspect-video flex items-center justify-center text-sm font-bold ${isActive ? 'bg-white/20' : 'bg-white/10 group-hover:bg-white/15'}`}>
-                            {isActive ? <PlayIcon className="h-8 w-8 text-white" /> : <span className="text-lg font-bold text-white/60">{ep.episode_number}</span>}
-                          </div>
-                          <div className="p-2 bg-[#1a1a1a] min-h-[60px]">
-                            <p className={`text-xs font-medium truncate ${isActive ? 'text-white' : 'text-white/80'}`}>{ep.episode_number}. {ep.name}</p>
-                            {ep.air_date && <p className="text-[10px] text-[#aaaaaa]/60 mt-1">{new Date(ep.air_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>}
-                            {ep.overview && <p className="text-[10px] text-[#aaaaaa]/50 mt-0.5 line-clamp-2 leading-relaxed">{ep.overview}</p>}
-                          </div>
-                          {isActive && <div className="absolute top-1 left-1 bg-white text-black text-[10px] font-bold px-1.5 py-0.5 rounded">Playing</div>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </>
-          ) : null}
+            </div>
+          )}
         </div>
       </div>
 
