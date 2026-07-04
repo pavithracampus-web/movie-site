@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Header from '@/app/(main)/components/Header';
 import Hero from '@/app/(main)/components/Hero';
 import MovieRow from '@/app/(main)/components/MovieRow';
 import SearchModal from '@/app/(main)/components/SearchModal';
-import VideoPlayerModal from '@/app/(main)/components/VideoPlayerModal';
 import Footer from '@/app/(main)/components/Footer';
 import type { Movie } from '@/app/(main)/types';
 
@@ -48,9 +48,8 @@ function getFilteredRows(activeNav: string): RowData[] {
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-  const [playerOpen, setPlayerOpen] = useState(false);
   const [heroMovies, setHeroMovies] = useState<Movie[]>([]);
   const [rowData, setRowData] = useState<Record<string, Movie[]>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
@@ -151,25 +150,22 @@ export default function HomePage() {
     return () => observer.disconnect();
   }, [filteredRows, rowHasMore, currentPages, loadingMore]);
 
+  const navigateToWatch = useCallback((movie: Movie) => {
+    const type = movie.media_type === 'tv' ? 'tv' : 'movie';
+    router.push(`/watch/${movie.id}?type=${type}`);
+  }, [router]);
+
   const handlePlay = useCallback((movie: Movie) => {
-    setSelectedMovie(movie);
-    setPlayerOpen(true);
-  }, []);
+    navigateToWatch(movie);
+  }, [navigateToWatch]);
 
   const handleMoreInfo = useCallback((movie: Movie) => {
-    setSelectedMovie(movie);
-    setPlayerOpen(true);
-  }, []);
+    navigateToWatch(movie);
+  }, [navigateToWatch]);
 
   const handleMovieClick = useCallback((movie: Movie) => {
-    setSelectedMovie(movie);
-    setPlayerOpen(true);
-  }, []);
-
-  const closePlayer = useCallback(() => {
-    setPlayerOpen(false);
-    setSelectedMovie(null);
-  }, []);
+    navigateToWatch(movie);
+  }, [navigateToWatch]);
 
   if (initialLoading) {
     return (
@@ -240,11 +236,6 @@ export default function HomePage() {
         onMovieClick={handleMovieClick}
       />
 
-      <VideoPlayerModal
-        movie={selectedMovie}
-        isOpen={playerOpen}
-        onClose={closePlayer}
-      />
     </div>
   );
 }

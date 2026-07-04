@@ -135,7 +135,7 @@ export default function SeriesPage() {
       <SearchModal
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
-        onMovieClick={(movie) => router.push(`/watch/${movie.id}`)}
+        onMovieClick={(movie) => router.push(`/watch/${movie.id}?type=tv`)}
       />
     </div>
   );

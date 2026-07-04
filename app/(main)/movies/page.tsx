@@ -1,17 +1,16 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Header from '@/app/(main)/components/Header';
 import SearchModal from '@/app/(main)/components/SearchModal';
-import VideoPlayerModal from '@/app/(main)/components/VideoPlayerModal';
 import Footer from '@/app/(main)/components/Footer';
 import type { Movie } from '@/app/(main)/types';
 import { getPosterUrl, formatYear, formatRating } from '@/app/(main)/lib/utils';
 
 export default function MoviesPage() {
+  const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-  const [playerOpen, setPlayerOpen] = useState(false);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -59,14 +58,8 @@ export default function MoviesPage() {
   }, [page, totalPages, loading, loadingMore, fetchPage]);
 
   const handleMovieClick = useCallback((movie: Movie) => {
-    setSelectedMovie(movie);
-    setPlayerOpen(true);
-  }, []);
-
-  const closePlayer = useCallback(() => {
-    setPlayerOpen(false);
-    setSelectedMovie(null);
-  }, []);
+    router.push(`/watch/${movie.id}?type=movie`);
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-netflix-black">
@@ -142,11 +135,6 @@ export default function MoviesPage() {
         onMovieClick={handleMovieClick}
       />
 
-      <VideoPlayerModal
-        movie={selectedMovie}
-        isOpen={playerOpen}
-        onClose={closePlayer}
-      />
     </div>
   );
 }
