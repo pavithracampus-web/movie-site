@@ -41,6 +41,7 @@ export default function CloakLayout({ children }: { children: React.ReactNode })
   return (
     <html lang="en">
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <style>{styles}</style>
       </head>
       <body>{children}</body>

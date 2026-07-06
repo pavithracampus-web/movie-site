@@ -21,6 +21,7 @@ export default function MainLayout({
   return (
     <html lang="en">
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         {[
           'https://vidsrc.pro',
           'https://vidsrc.in',

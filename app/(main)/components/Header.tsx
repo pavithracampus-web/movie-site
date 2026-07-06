@@ -31,17 +31,17 @@ export default function Header({ onSearchClick, activeNav, onNavChange }: Header
         scrolled ? 'bg-netflix-black/95 shadow-lg' : 'bg-gradient-to-b from-black/80 to-transparent'
       }`}
     >
-      <div className="flex items-center justify-between px-4 md:px-12 h-16 md:h-20">
-        <div className="flex items-center gap-8">
+      <div className="flex items-center justify-between px-3 md:px-12 h-14 md:h-20">
+        <div className="flex items-center gap-3 md:gap-8 min-w-0">
           <Link href="/" className="shrink-0">
-            <h1 className="text-netflix-red text-3xl md:text-4xl font-bold tracking-tight select-none">
+            <h1 className="text-netflix-red text-2xl md:text-4xl font-bold tracking-tight select-none">
               FLARE
             </h1>
           </Link>
-          <nav className="hidden md:flex items-center gap-5">
+          <nav className="flex items-center gap-2 md:gap-5 overflow-x-auto scrollbar-none">
             <Link
               href="/"
-              className={`text-sm font-medium transition-colors hover:text-white ${
+              className={`whitespace-nowrap text-[11px] md:text-sm font-medium transition-colors hover:text-white ${
                 isActive('/') && pathname === '/' ? 'text-white' : 'text-netflix-light'
               }`}
             >
@@ -49,7 +49,7 @@ export default function Header({ onSearchClick, activeNav, onNavChange }: Header
             </Link>
             <Link
               href="/series"
-              className={`text-sm font-medium transition-colors hover:text-white ${
+              className={`whitespace-nowrap text-[11px] md:text-sm font-medium transition-colors hover:text-white ${
                 isActive('/series') ? 'text-white' : 'text-netflix-light'
               }`}
             >
@@ -57,7 +57,7 @@ export default function Header({ onSearchClick, activeNav, onNavChange }: Header
             </Link>
             <Link
               href="/movies"
-              className={`text-sm font-medium transition-colors hover:text-white ${
+              className={`whitespace-nowrap text-[11px] md:text-sm font-medium transition-colors hover:text-white ${
                 isActive('/movies') ? 'text-white' : 'text-netflix-light'
               }`}
             >
@@ -66,7 +66,7 @@ export default function Header({ onSearchClick, activeNav, onNavChange }: Header
             <a
               href="#my-list"
               onClick={(e) => { e.preventDefault(); onNavChange?.('My List'); }}
-              className={`text-sm font-medium transition-colors hover:text-white ${
+              className={`whitespace-nowrap text-[11px] md:text-sm font-medium transition-colors hover:text-white ${
                 activeNav === 'My List' ? 'text-white' : 'text-netflix-light'
               }`}
             >
