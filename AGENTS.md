@@ -91,10 +91,15 @@ The cloak page at `/app/cloak/` renders a genuine-looking personal blog titled "
 The middleware runs on Vercel's Edge Runtime by default. The `dns.google` lookup in the reverse DNS check may have latency implications. If you need to optimize, remove the reverse DNS check and rely solely on User-Agent + IP range detection.
 
 ## Streaming Sources
-The player modal uses Vidsrc embeds:
-- Primary: `https://vidsrc.to/embed/movie/{imdb_id}`
-- Fallback: `https://vidsrc.pro/embed/movie/{tmdb_id}`
+The player modal uses 6 streaming servers:
+- **Server 1** - `vidsrc.pro/embed/movie/{tmdb_id}`
+- **Server 2** - `vidsrc.in/embed/movie/{tmdb_id}`
+- **Server 3** - `vidsrc.to/embed/movie/{tmdb_id}`
+- **Server 4** - `embed.su/embed/movie/{tmdb_id}`
+- **Server 5 (SuperEmbed)** - `multiembed.mov/?video_id={tmdb_id}&tmdb=1`
+- **Server 6 (NontonGo)** - `nontongo.win/embed/movie/{tmdb_id}`
 - Users can toggle between sources in the player modal
+- The `/watch/[id]` page also supports auto-failover across 6 servers
 
 ## Customization
 - **Add more genres** - Edit `GENRES` array in `app/(main)/lib/tmdb.ts`

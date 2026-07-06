@@ -20,6 +20,20 @@ export default function MainLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {[
+          'https://vidsrc.pro',
+          'https://vidsrc.in',
+          'https://vidsrc.to',
+          'https://embed.su',
+          'https://multiembed.mov',
+          'https://www.nontongo.win',
+          'https://player.cinezo.live',
+          'https://player.embed-api.stream',
+        ].map((domain) => (
+          <link key={domain} rel="preconnect" href={domain} crossOrigin="anonymous" />
+        ))}
+      </head>
       <body>{children}</body>
     </html>
   );

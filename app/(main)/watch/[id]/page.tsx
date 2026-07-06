@@ -10,6 +10,9 @@ const SERVERS = [
   { name: 'Server 1', label: 'VidSrc To' },
   { name: 'Server 2', label: 'Embed.su' },
   { name: 'Server 3', label: 'Cinezo' },
+  { name: 'Server 4', label: 'EmbedAPI' },
+  { name: 'Server 5', label: 'SuperEmbed' },
+  { name: 'Server 6', label: 'NontonGo' },
 ];
 
 const AUTO_TIMEOUT = 8000;
@@ -18,12 +21,18 @@ const TV_SERVER_URLS = [
   (tmdbId: string, s: number, e: number) => `https://vidsrc.to/embed/tv/${tmdbId}/${s}/${e}`,
   (tmdbId: string, s: number, e: number) => `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`,
   (tmdbId: string, s: number, e: number) => `https://player.cinezo.live/embed/tv/${tmdbId}/${s}/${e}`,
+  (tmdbId: string, s: number, e: number) => `https://player.embed-api.stream/?id=${tmdbId}&s=${s}&e=${e}`,
+  (tmdbId: string, s: number, e: number) => `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${s}&e=${e}`,
+  (tmdbId: string, s: number, e: number) => `https://www.nontongo.win/embed/tv/${tmdbId}/${s}/${e}`,
 ];
 
 const MOVIE_SERVER_URLS = [
   (tmdbId: string) => `https://vidsrc.to/embed/movie/${tmdbId}`,
   (tmdbId: string) => `https://embed.su/embed/movie/${tmdbId}`,
   (tmdbId: string) => `https://player.cinezo.live/embed/movie/${tmdbId}`,
+  (tmdbId: string) => `https://player.embed-api.stream/?id=${tmdbId}`,
+  (tmdbId: string) => `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`,
+  (tmdbId: string) => `https://www.nontongo.win/embed/movie/${tmdbId}`,
 ];
 
 function PlayIcon({ className = 'h-4 w-4' }: { className?: string }) {
@@ -227,6 +236,52 @@ export default function WatchPage({ params }: { params: { id: string } }) {
   }, [nextServer]);
 
   useEffect(() => {
+    const origOpen = window.open;
+    window.open = () => null;
+    return () => { window.open = origOpen; };
+  }, []);
+
+  useEffect(() => {
+    const host = window.location.host;
+    const currentHref = window.location.href;
+    const loc = window.location;
+    const origReplace = loc.replace.bind(loc);
+
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+
+    try {
+      Object.defineProperty(window, 'location', {
+        get: () => loc,
+        set: (value) => {
+          try {
+            const parsed = new URL(String(value), currentHref);
+            if (parsed.host === host || String(value).startsWith('magnet:')) {
+              loc.replace(String(value));
+            }
+          } catch {}
+        },
+        configurable: true,
+      });
+    } catch {}
+
+    const interval = setInterval(() => {
+      if (window.location.host !== host) {
+        origReplace(currentHref);
+      }
+    }, 100);
+
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      clearInterval(interval);
+      try { Object.defineProperty(window, 'location', { value: loc, writable: true, configurable: true }); } catch {}
+    };
+  }, []);
+
+  useEffect(() => {
     if (!embedUrl) return;
     setIframeLoading(true);
     setIframeError(false);
@@ -366,6 +421,19 @@ export default function WatchPage({ params }: { params: { id: string } }) {
                     </div>
                   </div>
                 )}
+                <div
+                  className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 cursor-pointer transition-opacity duration-300 hover:bg-black/40"
+                  onClick={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                >
+                  <div className="flex flex-col items-center gap-3 pointer-events-none">
+                    <svg className="h-12 w-12 text-white/80" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                    <p className="text-sm text-white/80 font-medium">Click to enable player</p>
+                  </div>
+                </div>
                 <iframe
                   key={playerKey}
                   src={embedUrl}

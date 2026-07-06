@@ -47,9 +47,23 @@ export const STREAM_SOURCES: { name: string; url: StreamUrlFn }[] = [
     url: (id, s, e) =>
       s ? `https://embed.su/embed/tv/${id}/${s}/${e}` : `https://embed.su/embed/movie/${id}`,
   },
+  {
+    name: 'Server 5',
+    url: (id, s, e) =>
+      s
+        ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}`
+        : `https://multiembed.mov/?video_id=${id}&tmdb=1`,
+  },
+  {
+    name: 'Server 6',
+    url: (id, s, e) =>
+      s
+        ? `https://www.nontongo.win/embed/tv/${id}/${s}/${e}`
+        : `https://www.nontongo.win/embed/movie/${id}`,
+  },
 ];
 
-export const TORRENT_INDEX = 4;
+export const TORRENT_INDEX = 6;
 
 export const TRACKERS = [
   'udp://tracker.coppersurfer.tk:6969/announce',

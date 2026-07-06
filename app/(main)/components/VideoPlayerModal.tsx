@@ -347,6 +347,16 @@ export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayer
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const origOpen = window.open;
+    window.open = (url, ...rest) => {
+      if (typeof url === 'string' && url.startsWith('magnet:')) return origOpen(url, ...rest);
+      return null;
+    };
+    return () => { window.open = origOpen; };
+  }, [isOpen]);
+
   const resetState = useCallback(() => {
     setLoading(true);
     setError('');
@@ -631,6 +641,19 @@ export default function VideoPlayerModal({ movie, isOpen, onClose }: VideoPlayer
                     </div>
                   </div>
                 )}
+                <div
+                  className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 cursor-pointer transition-opacity duration-300 hover:bg-black/40"
+                  onClick={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                >
+                  <div className="flex flex-col items-center gap-3 pointer-events-none">
+                    <svg className="h-12 w-12 text-white/80" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                    <p className="text-sm text-white/80 font-medium">Click to enable player</p>
+                  </div>
+                </div>
                 <iframe
                   key={iframeKey}
                   src={videoUrl}
